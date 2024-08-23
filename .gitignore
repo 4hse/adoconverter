@@ -1,0 +1,6 @@
+/bucket
+/node_modules
+/coverage
+/config/service-local.js
+.vscode
+.idea
