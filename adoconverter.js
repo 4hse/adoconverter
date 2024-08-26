@@ -81,7 +81,10 @@ function getTargetCss(targetPath, css) {
  */
 async function main(sourcePath, targetPath, targetCss, silent = false, pattern, ignore) {
 
-    const files = await glob(sourcePath + pattern, {'ignore' : ignore});
+    const files = await glob(sourcePath + pattern, {
+        'ignore' : ignore,
+        'dotRelative' : true
+    });
 
     for (let i = 0; i < files.length; i++) {
         const currentFile = files[i];
