@@ -2,10 +2,12 @@ const adoc = require("asciidoctor")();
 const path = require("path");
 const config = require("./config/service");
 const fs = require("fs");
-const glob = require("glob");
+const {glob} = require("glob");
 const regexAdoc2Html = /href="([^"]*)\.adoc"/gm;
 
-const argv = require('yargs')
+const yargs = require('yargs');
+
+const argv = yargs(process.argv.slice(2))
     .usage('Usage: $0 <source-dir> <destination-dir> [options]')
     .command('source-dir destination-dir [options]')
     .options('css', {
@@ -35,7 +37,7 @@ const argv = require('yargs')
         description: 'Execute tests'
     })
     .demandCommand(2, 'source-dir destination-dir are required')
-    .argv;
+    .parse();
 
 if (argv.test) {
     test()
@@ -77,29 +79,28 @@ function getTargetCss(targetPath, css) {
  * @param {string} pattern
  * @param {string[]} ignore
  */
-function main(sourcePath, targetPath, targetCss, silent = false, pattern, ignore) {
+async function main(sourcePath, targetPath, targetCss, silent = false, pattern, ignore) {
 
-    glob(sourcePath + pattern, {'ignore' : ignore},function (err, files) {
+    const files = await glob(sourcePath + pattern, {'ignore' : ignore});
 
-        for (let i = 0; i < files.length; i++) {
-            const currentFile = files[i];
-            const sourceFilename = path.basename(currentFile);
-            const targetFilePath = getOutputPath(currentFile, sourcePath, targetPath);
+    for (let i = 0; i < files.length; i++) {
+        const currentFile = files[i];
+        const sourceFilename = path.basename(currentFile);
+        const targetFilePath = getOutputPath(currentFile, sourcePath, targetPath);
 
-            if (!silent) {
-                console.log(
-                    "Running on -> " + currentFile,
-                );
-            }
-
-            if (path.extname(sourceFilename) === ".adoc") {
-                const targetFilePathHtml = targetFilePath.replace(/.adoc$/, ".html");
-                adocToHtml(currentFile, targetFilePathHtml, targetCss);
-            } else {
-                copyFile(currentFile, targetFilePath);
-            }
+        if (!silent) {
+            console.log(
+                "Running on -> " + currentFile,
+            );
         }
-    });
+
+        if (path.extname(sourceFilename) === ".adoc") {
+            const targetFilePathHtml = targetFilePath.replace(/.adoc$/, ".html");
+            adocToHtml(currentFile, targetFilePathHtml, targetCss);
+        } else {
+            copyFile(currentFile, targetFilePath);
+        }
+    }
 }
 
 /**
